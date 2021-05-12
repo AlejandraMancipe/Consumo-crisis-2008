@@ -1,5 +1,5 @@
 ---
-title: "Consumo hogares crisis 2008"
+title: "Impacto en el consumo de los hogares en la crisis del 2008"
 author: "Alejandra Mancipe -Santiago Villamil"
 date: "11/5/2021"
 output: pdf_document
@@ -13,12 +13,13 @@ library(readr)
 library(dplyr)
 library(stargazer)
 library(pastecs)
-library(writexl)
 library(ggplot2)
+library(ggthemes)
+library(scales)
 ```
 
-#descargando las bases de datos
-con el fin de evaluar el impacto en el consumo de los hogares, se van a llamar las variables a usar que pueden servir para evaluar el impacto en el consumo de los hogares. Para ello, vamos a llamar las bases de datos para las variabes dependientes:*consumo *,y las variables independientes: *ingreso nacional bruto per cápita*,*Desempleo total(% participació total en la fuerza laboral**PIB per cápita(US $ a precios constantes de 2010* para los años 2006 al 2010; es decir 2 años antes de la crisis del 2008 y dos años posteriores a la crisis. Entre estos, se seleccionaron 16 paises siendo unos desarrollados y en vias de desarrollo provenientes de los disferentes continentes del mundo.
+**descargando las bases de datos**
+con el fin de evaluar el impacto en el consumo de los hogares, se van a llamar las variables a usar que pueden servir para evaluar el impacto en el consumo de los hogares. Para ello, vamos a llamar las bases de datos para las variabes dependientes:*consumo(gasto en consumo final de los hogares a precios constantes de 2010)*,y las variables independientes: *ingreso nacional bruto per cápita(a precios constantes de 2010)*,*Desempleo total(% participació total en la fuerza laboral**PIB per cápita(US $ a precios constantes de 2010* para los años 2006 al 2010; es decir 2 años antes de la crisis del 2008 y dos años posteriores a la crisis. Entre estos, se seleccionaron 16 paises siendo unos desarrollados y en vías de desarrollo provenientes de los disferentes continentes del mundo.
 
 ```{r}
 data <- wb_data(c("NE.CON.PRVT.PC.KD","NY.GNP.PCAP.KD","SL.UEM.TOTL.ZS","NY.GDP.PCAP.KD"), start_date = 2006, end_date = 2010)
@@ -28,11 +29,12 @@ data <- data %>% filter(str_detect(iso3c, "USA|COL|BOL|MEX|DEU|ROU|FRA|GBR|ZAF|G
 colnames(data) <- c("iso3c", "country", "date", "consum", "income", "unemp", "gdppc")
 ```
 
-#Asegurandonos de que las variables esten adecuadamente identificadas según su tipo 
+#Duda
+**Asegurandonos de que las variables esten adecuadamente identificadas según su tipo **
 ```{r}
 class(data$consum)
 ```
-#Realizando la tabla de estadisticas descriptivas
+**Realizando la tabla de estadísticas descriptivas**
 ```{r}
 stargazer(as.data.frame(data), type = "text", 
           out = "tabla1.tex", 
@@ -45,6 +47,7 @@ stargazer(as.data.frame(data), type = "text",
 
 ```
 #no se como hacerla
+Realizando los diferentes histogramas, no se puede observar sentido alguno, la hipótesis se que se tiene es que al ser las variables continuas, no se logra observar algún sentido, ya que este tipo de gráficas es mas para variables categóricas 
 ```{r}
 ggplot(data, 
        mapping = aes(x = income)) + 
@@ -59,41 +62,56 @@ ggplot(data,
     breaks = seq(from = 967, to = 33726, by = 5000)) 
   
 ggplot(data, 
-       mapping = aes( x = unemp)) +
-  geom_histogram(bins = "5")
+       mapping = aes( x = income)) +
+  geom_histogram()
   
 
 ```
 
-#correlaciones
+**correlaciones**
 se puede observar que para las variables ingreso per cáita y GDP per cápita, existe una fuerte correlación lineal entre la variable dependiente consumo
 ```{r}
 variables <- data %>% select("consum":"gdppc")
 cor(variables)
 ```
 
+**realizando un diagrama de dispersión**
+```{r}
+ggplot(data, 
+       mapping = aes(x = gdppc, 
+                     y = consum)) +
+  geom_point(color= "midnightblue")+
+  geom_smooth(method = "lm", color="deepskyblue")+
+  scale_x_continuous(
+    breaks = seq(from = 5000, to = 50000, by = 5000),
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  scale_y_continuous(
+    breaks = seq(from = 5000, to = 35000, by = 5000), 
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  labs(title =  "Relación + entre la variable de consumo y GDP", x = "GPD per cápita a US$ constantes de 2010", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
 
+```
+
+```{r}
+ggplot(data, 
+       mapping = aes(x = income, 
+                     y = consum)) +
+  geom_point(color= "midnightblue")+
+  geom_smooth(method = "lm", color="deepskyblue")+
+  scale_x_continuous(
+    breaks = seq(from = 1000, to = 50000, by = 5000),
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  scale_y_continuous(
+    breaks = seq(from = 5000, to = 35000, by = 5000), 
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  labs(title =  "Relación + entre la variable de consumo e ingreso", x = "Ingreso per cápita a precios constantes de 2010", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
+
+```
+**Respondiendo a la pregunta 9**
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
