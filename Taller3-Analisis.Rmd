@@ -19,22 +19,37 @@ library(scales)
 ```
 
 **descargando las bases de datos**
-con el fin de evaluar el impacto en el consumo de los hogares, se van a llamar las variables a usar que pueden servir para evaluar el impacto en el consumo de los hogares. Para ello, vamos a llamar las bases de datos para las variabes dependientes:*consumo(gasto en consumo final de los hogares a precios constantes de 2010)*,y las variables independientes: *ingreso nacional bruto per cápita(a precios constantes de 2010)*,*Desempleo total(% participació total en la fuerza laboral**PIB per cápita(US $ a precios constantes de 2010* para los años 2006 al 2010; es decir 2 años antes de la crisis del 2008 y dos años posteriores a la crisis. Entre estos, se seleccionaron 16 paises siendo unos desarrollados y en vías de desarrollo provenientes de los disferentes continentes del mundo.
+
+con el fin de evaluar el impacto en el consumo de los hogares, se van a llamar las variables a usar que pueden servir para evaluar el impacto en el consumo de los hogares. Para ello, vamos a llamar las bases de datos para las variabes dependientes:*consumo(gasto en consumo final de los hogares a precios constantes de 2010)*,y las variables independientes: *ingreso nacional bruto per cápita(a precios constantes de 2010)*,*Desempleo total(% participació total en la fuerza laboral**PIB per cápita(US $ a precios constantes de 2010*, *inflación(a precios del consumidor en %anual)*, *la tasa de interés real(ajustada por la inflación, según el deflactor del PIB)* para los años 2006 al 2010; es decir 2 años antes de la crisis del 2008 y dos años posteriores a la crisis. Entre estos, se seleccionaron 16 paises siendo unos desarrollados y en vías de desarrollo provenientes de los disferentes continentes del mundo.De los cuales también sufrieron choques debido a la crisis financiera
 
 ```{r}
-data <- wb_data(c("NE.CON.PRVT.PC.KD","NY.GNP.PCAP.KD","SL.UEM.TOTL.ZS","NY.GDP.PCAP.KD"), start_date = 2006, end_date = 2010)
-data <- select(data, iso3c, country, date, NE.CON.PRVT.PC.KD, NY.GNP.PCAP.KD, SL.UEM.TOTL.ZS, NY.GDP.PCAP.KD)
+data <- wb_data(c("NE.CON.PRVT.PC.KD","NY.GNP.PCAP.KD","SL.UEM.TOTL.ZS","NY.GDP.PCAP.KD", "FP.CPI.TOTL.ZG", "FR.INR.RINR"), start_date = 2006, end_date = 2010)
+data <- select(data, iso3c, country, date, NE.CON.PRVT.PC.KD, NY.GNP.PCAP.KD, SL.UEM.TOTL.ZS, NY.GDP.PCAP.KD, FP.CPI.TOTL.ZG, FR.INR.RINR)
 data <- data %>% filter(str_detect(iso3c, "USA|COL|BOL|MEX|DEU|ROU|FRA|GBR|ZAF|GHA|NGA|
 |JPN|CHN|VNM|KOR|AUS"))
-colnames(data) <- c("iso3c", "country", "date", "consum", "income", "unemp", "gdppc")
+colnames(data) <- c("iso3c", "country", "date", "consum", "income", "unemp", "gdppc", "inflation", "interest")
+
+```
+
+Los datos para la tasa de interés real no estaban disponibles para Alemania, Francia y Ghana. Los datos para los dos primeros países se obtuvieron de Ycharts, y para Ghana, de la página oficial de Bank of Ghana. 
+```{r}
+deufra <- c(5.08,4.19,5.09,3.15,3.09,3.73,4.6,5.62,7.36,5.52)
+gha <- c(19.016,21.183,8.509,4.985,15.00)
+interest <- append(data$interest[-c(21:30)], deufra, 20)
+interest <- append(interest[-c(36:40)], gha, 35)
+data$interest <- interest
 ```
 
 #Duda
 **Asegurandonos de que las variables esten adecuadamente identificadas según su tipo **
 ```{r}
 class(data$consum)
+class(data$inflation)
 ```
 **Realizando la tabla de estadísticas descriptivas**
+
+
+De acuerdo con los resultados de la tabla1.de estadísticas descriptivas para las variables de estudio, se puede observar, que cada variable presnta 80 observaciones. Para el consumo de los hogares, se puede observar que 
 ```{r}
 stargazer(as.data.frame(data), type = "text", 
           out = "tabla1.tex", 
@@ -42,36 +57,51 @@ stargazer(as.data.frame(data), type = "text",
           digits = 1, 
           covariate.labels = c( "AÑO","CONSUMO HOGARES", 
                                "INGRESO PC", 
-                               "DESEMPLEO","GDP") ,
+                               "DESEMPLEO","GDP","INFLACION","INTERES REAL") ,
           flip = TRUE)
 
 ```
 #no se como hacerla
 Realizando los diferentes histogramas, no se puede observar sentido alguno, la hipótesis se que se tiene es que al ser las variables continuas, no se logra observar algún sentido, ya que este tipo de gráficas es mas para variables categóricas 
+
+*Histograma para la variable dependiente*
 ```{r}
-ggplot(data, 
-       mapping = aes(x = income)) + 
-    geom_histogram(bins = "50")
-
-
-
 ggplot(data, 
        mapping = aes( x = consum)) +
   geom_histogram(bins = "15")+
   scale_x_continuous(
-    breaks = seq(from = 967, to = 33726, by = 5000)) 
-  
+    breaks = seq(from = 967, to = 33726, by = 5000)) +
+  scale_y_continuous(
+    breaks = seq(from = 0, to = 15, by = 5))+
+  labs(title =  "Gráfica 1",subtitle = "No se muestra algún senido", x = "Gasto en consumo de los hogares ", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
+```
+
+*Histograma para la variable independiente principal*
+```{r}
 ggplot(data, 
        mapping = aes( x = income)) +
-  geom_histogram()
-  
+  geom_histogram(bins = "15")+
+  scale_x_continuous(
+    breaks = c(1000,5000,10000,20000,30000,40000,50000)) +
+  scale_y_continuous(
+    breaks = seq(from = 0, to = 15, by = 5))+
+  labs(title =  "Gráfica 2.", subtitle="No se muestra algun sentido", x = "Ingreso Per Cápita", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
 
 ```
 
-**correlaciones**
-se puede observar que para las variables ingreso per cáita y GDP per cápita, existe una fuerte correlación lineal entre la variable dependiente consumo
+#otra cosa
 ```{r}
-variables <- data %>% select("consum":"gdppc")
+ggplot(data, 
+       mapping = aes(x = consum)) + 
+    geom_histogram(bins = "50")
+```
+
+**correlaciones**
+se puede observar que para las variables ingreso per cápita y GDP per cápita, existe una fuerte correlación lineal entre la variable dependiente consumo
+```{r}
+variables <- data %>% select("consum":"interest")
 cor(variables)
 ```
 
@@ -88,7 +118,7 @@ ggplot(data,
   scale_y_continuous(
     breaks = seq(from = 5000, to = 35000, by = 5000), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs(title =  "Relación + entre la variable de consumo y GDP", x = "GPD per cápita a US$ constantes de 2010", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  labs(title =  "Gráfica 3",subtitle="Relación + entre la variable de consumo y GDP", x = "GPD per cápita a US$ constantes de 2010", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()
 
 ```
@@ -97,19 +127,24 @@ ggplot(data,
 ggplot(data, 
        mapping = aes(x = income, 
                      y = consum)) +
-  geom_point(color= "midnightblue")+
-  geom_smooth(method = "lm", color="deepskyblue")+
+  geom_point(color= "mediumblue")+
+  geom_smooth(method = "lm", color="red")+
   scale_x_continuous(
     breaks = seq(from = 1000, to = 50000, by = 5000),
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
   scale_y_continuous(
     breaks = seq(from = 5000, to = 35000, by = 5000), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs(title =  "Relación + entre la variable de consumo e ingreso", x = "Ingreso per cápita a precios constantes de 2010", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  labs(title =  "Gráfica 4", subtitle="Relación + entre la variable de consumo e ingreso", x = "Ingreso per cápita a precios constantes de 2010", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()
 
 ```
+
+```{r}
+```
+
 **Respondiendo a la pregunta 9**
+De acuerdo con los resultados anteriores, se pudo observar
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
