@@ -1,6 +1,6 @@
 ---
 title: "Impacto en el consumo de los hogares en la crisis del 2008"
-author: "Alejandra Mancipe -Santiago Villamil"
+author: "Alejandra Mancipe - Santiago Villamil"
 date: "11/5/2021"
 output: pdf_document
 ---
@@ -20,27 +20,45 @@ library(scales)
 
 **descargando las bases de datos**
 
-con el fin de evaluar el impacto en el consumo de los hogares, se van a llamar las variables a usar que pueden servir para evaluar el impacto en el consumo de los hogares. Para ello, vamos a llamar las bases de datos para las variabes dependientes:*consumo(gasto en consumo final de los hogares a precios constantes de 2010)*,y las variables independientes: *ingreso nacional bruto per cápita(a precios constantes de 2010)*,*Desempleo total(% participació total en la fuerza laboral**PIB per cápita(US $ a precios constantes de 2010*, *inflación(a precios del consumidor en %anual)*, *la tasa de interés real(ajustada por la inflación, según el deflactor del PIB)* para los años 2006 al 2010; es decir 2 años antes de la crisis del 2008 y dos años posteriores a la crisis. Entre estos, se seleccionaron 16 paises siendo unos desarrollados y en vías de desarrollo provenientes de los disferentes continentes del mundo.De los cuales también sufrieron choques debido a la crisis financiera
+con el fin de evaluar el impacto en el consumo de los hogares, se van a llamar las variables a usar que pueden servir para evaluar el impacto en el consumo de los hogares. Para ello, vamos a llamar las bases de datos para las variabes dependientes:*consumo(gasto en consumo final de los hogares a precios constantes de 2010)*,y las variables independientes: *ingreso nacional bruto per cápita(a precios constantes de 2010)* , *Desempleo total(% participació total en la fuerza laboral**PIB per cápita(US $ a precios constantes de 2010* , *inflación(a precios del consumidor en %anual)* , *la tasa de interés real(ajustada por la inflación, según el deflactor del PIB)* para los años 2006 al 2010; es decir 2 años antes de la crisis del 2008 y dos años posteriores a la crisis. Entre estos, se seleccionaron 21 paises siendo unos desarrollados y en vías de desarrollo provenientes de los disferentes continentes del mundo.De los cuales también sufrieron choques debido a la crisis financiera.
 
 ```{r}
 data <- wb_data(c("NE.CON.PRVT.PC.KD","NY.GNP.PCAP.KD","SL.UEM.TOTL.ZS","NY.GDP.PCAP.KD", "FP.CPI.TOTL.ZG", "FR.INR.RINR"), start_date = 2006, end_date = 2010)
 data <- select(data, iso3c, country, date, NE.CON.PRVT.PC.KD, NY.GNP.PCAP.KD, SL.UEM.TOTL.ZS, NY.GDP.PCAP.KD, FP.CPI.TOTL.ZG, FR.INR.RINR)
 data <- data %>% filter(str_detect(iso3c, "USA|COL|BOL|MEX|DEU|ROU|FRA|GBR|ZAF|GHA|NGA|
-|JPN|CHN|VNM|KOR|AUS"))
+|JPN|CHN|VNM|KOR|AUS|BHR|ESP|GRC|ISR|NZL"))
 colnames(data) <- c("iso3c", "country", "date", "consum", "income", "unemp", "gdppc", "inflation", "interest")
 
 ```
 
-Los datos para la tasa de interés real no estaban disponibles para Alemania, Francia y Ghana. Los datos para los dos primeros países se obtuvieron de Ycharts, y para Ghana, de la página oficial de Bank of Ghana. 
+Los datos para la tasa de interés real no estaban disponibles para Alemania,España, Francia,Grecia,Israel y Ghana. Los datos para los dos primeros países se obtuvieron de Ycharts, y para Ghana, de la página oficial de Bank of Ghana. 
 ```{r}
-deufra <- c(5.08,4.19,5.09,3.15,3.09,3.73,4.6,5.62,7.36,5.52)
+deu <- c(5.08,4.19,5.09,3.15,3.09)
+fra <- c(3.73,4.6,5.62,7.36,5.52)
 gha <- c(19.016,21.183,8.509,4.985,15.00)
-interest <- append(data$interest[-c(21:30)], deufra, 20)
-interest <- append(interest[-c(36:40)], gha, 35)
+esp <- c(4.57,6.35,8.69,10.44,7.19)
+deuespfra <- c(deu, esp, fra)
+grc <- c(4.25,4.14,4.12,5.87,9.05)
+isr <- c(6.34,5.52,4.09,-0.05,3.36)
+ghagrcisr <- c(gha,grc,isr)
+interest <- append(data$interest[-c(26:40)], deuespfra, 25)
+interest <- append(interest[-c(46:60)], ghagrcisr, 45)
 data$interest <- interest
 ```
 
+
+Se realiza un filtro para encontrar países con ingreso medio, con el fin de incluirlos en la selección de países, puesto que con los datos originales, vimos una subrepresentación de países en este rango de ingresos.
+
+```{r}
+midincome<- wb_data(c("NE.CON.PRVT.PC.KD","NY.GNP.PCAP.KD","SL.UEM.TOTL.ZS","NY.GDP.PCAP.KD", "FP.CPI.TOTL.ZG", "FR.INR.RINR"), start_date = 2006, end_date = 2010)
+
+midincome <- midincome %>% filter(between(NY.GNP.PCAP.KD, 20000,40000))
+```
+
+
+
 #Duda
+
 **Asegurandonos de que las variables esten adecuadamente identificadas según su tipo **
 ```{r}
 class(data$consum)
@@ -49,7 +67,8 @@ class(data$inflation)
 **Realizando la tabla de estadísticas descriptivas**
 
 
-De acuerdo con los resultados de la tabla1.de estadísticas descriptivas para las variables de estudio, se puede observar, que cada variable presnta 80 observaciones. Para el consumo de los hogares, se puede observar que 
+De acuerdo con los resultados de la *tabla1* de estadísticas descriptivas para las variables de estudio, se puede observar, que cada variable presenta 105 observaciones. Para el consumo de los hogares, se puede observar que el gasto en *Consumo* de los hogares mínimo para los países es de 13.143 US, y el máximo de 33.726 US con una media en el consumo de 13.143 US. En segundo lugar, para la variable *Ingreso* se puede observar que el ingreso mínimo de los hogares para los países de estudio es de 1.057 US, y el ingreso máximo es de 50.033 US y el ingreso medio de los hogares es de 22.380 US. En tercer lugar, para la variable *Desempleo* que se encuentra en porcentaje, se puede observar que para el periodo de estudio del 2006 al 2008, el desempleo mínimo fue de 1.1%, lo que indica una tasa baja de desempleo.No obstante, se presentó como la tasa más alta de desempelo de 28.3% con una media de 6.9%. En cuarto lugar, para la variable *GDP* per cápita, se puede observar que para el periodo de estudio,la media del PIB 22.623 US con un PIB máximo de 52.022 US a precios consantes de 2010.Por el lado de la *inflación* , se puede observar una inflación media de 4.5%; entre estas, tambien se observa una inflación negativa del 1.4% como valor mínimo y como valor máximo, s observa una inflación del 23.1%. Por último, se observa que para la variable de *interés real* , se obtuvo una tasa media del 4.4%. En ésta tasa, se observa un minimo de -5.6% y como tasa máxima el 24.1%. 
+
 ```{r}
 stargazer(as.data.frame(data), type = "text", 
           out = "tabla1.tex", 
@@ -61,51 +80,108 @@ stargazer(as.data.frame(data), type = "text",
           flip = TRUE)
 
 ```
-#no se como hacerla
-Realizando los diferentes histogramas, no se puede observar sentido alguno, la hipótesis se que se tiene es que al ser las variables continuas, no se logra observar algún sentido, ya que este tipo de gráficas es mas para variables categóricas 
 
 *Histograma para la variable dependiente*
+
+
 ```{r}
 ggplot(data, 
        mapping = aes( x = consum)) +
-  geom_histogram(bins = "15")+
+  geom_histogram(bins = "10",fill= "darkorange", color= "black")+
   scale_x_continuous(
-    breaks = seq(from = 967, to = 33726, by = 5000)) +
+    breaks = c(967,2000,50000,8000,10000,20000,30000)) +
   scale_y_continuous(
-    breaks = seq(from = 0, to = 15, by = 5))+
-  labs(title =  "Gráfica 1",subtitle = "No se muestra algún senido", x = "Gasto en consumo de los hogares ", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+    breaks = seq(from = 0, to = 25, by = 5))+
+  labs(title =  "Gráfica 1", x = "Gasto en consumo de los hogares ", caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()
 ```
 
-*Histograma para la variable independiente principal*
+**Histograma para las variables independientes principales**
+
+*Histograma para la variable ingreso*
 ```{r}
 ggplot(data, 
        mapping = aes( x = income)) +
-  geom_histogram(bins = "15")+
+  geom_histogram(bins = "15", fill= "deepskyblue", color= "black")+
   scale_x_continuous(
-    breaks = c(1000,5000,10000,20000,30000,40000,50000)) +
+    breaks = c(1000,5000,10000,20000,25000,30000,40000,50000)) +
   scale_y_continuous(
-    breaks = seq(from = 0, to = 15, by = 5))+
-  labs(title =  "Gráfica 2.", subtitle="No se muestra algun sentido", x = "Ingreso Per Cápita", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+    breaks = seq(from = 0, to = 15, by = 3))+
+  labs(title =  "Gráfica 2.", x = "Ingreso Per Cápita", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
+```
+*Histograma para la variable Desempleo*
+```{r}
+ggplot(data, 
+       mapping = aes(x = unemp)) + 
+    geom_histogram(bins="30", fill= "lawngreen", color= "black")+
+   scale_x_continuous(
+    breaks = seq(from=1.1, to= 28.3, by= 2.2)) +
+  scale_y_continuous(
+    breaks = seq(from = 0, to = 15, by = 3))+
+  labs(title =  "Gráfica 3.", x = "% DESEMPLEO", caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()
 
 ```
 
-#otra cosa
+*Histograma para la variable GDP*
 ```{r}
 ggplot(data, 
-       mapping = aes(x = consum)) + 
-    geom_histogram(bins = "50")
+       mapping = aes(x = gdppc)) + 
+    geom_histogram(bins = 30, fill= "lightpink4", color= "black")+
+   scale_x_continuous(
+    breaks = seq(from=1079, to= 52022, by= 2000)) +
+  scale_y_continuous(
+    breaks = seq(from = 0, to = 20, by = 2))+
+  labs(title =  "Gráfica 4.", x = "GDP Per Cápita", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
+
+
 ```
 
-**correlaciones**
-se puede observar que para las variables ingreso per cápita y GDP per cápita, existe una fuerte correlación lineal entre la variable dependiente consumo
+*Histograma para la variable inflación*
+```{r}
+ggplot(data, 
+       mapping = aes(x = inflation)) + 
+    geom_histogram(bins = "30",fill= "lightpink4",color= "black")+
+  scale_x_continuous(
+    breaks = seq(from= -1.4, to= 23.1, by= 2)) +
+  scale_y_continuous(
+    breaks = seq(from = 0, to = 20, by = 2))+
+  labs(title =  "Gráfica 5.", x = "Inflación", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
+
+
+
+```
+
+*Hispograma para la Variable Tasa de interés real*
+```{r}
+ggplot(data, 
+       mapping = aes(x = interest)) + 
+    geom_histogram(bins = "30", fill= "mediumpurple",color= "black")+
+  scale_x_continuous(
+    breaks = seq(from= -5.6, to= 24.4, by= 2)) +
+  scale_y_continuous(
+    breaks = seq(from = 0, to = 20, by = 2))+
+  labs(title =  "Gráfica 6.", x = "Tasa de interés real", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
+
+```
+
+**Matriz de Correlaciones**
+
+
+se puede observar que para las variables ingreso per cápita y GDP per cápita, existe una fuerte correlación lineal entre la variable dependiente consumo, ya que son muy cercanas a 1, lo que quiere decir que las variables son directamente proporcionales; mientras que para las demas variables: *desempleo, inflación y la tasa de interés real* , se observa una correlación negativa entre la variable dependiente, lo que quiere decir que son inversamente proporcionales.
+
 ```{r}
 variables <- data %>% select("consum":"interest")
 cor(variables)
 ```
 
 **realizando un diagrama de dispersión**
+
+*Diagrama de dispersión para la variable GDP Vs. Consumo*
 ```{r}
 ggplot(data, 
        mapping = aes(x = gdppc, 
@@ -123,6 +199,7 @@ ggplot(data,
 
 ```
 
+*Diagrama de dispersión para la variable Ingreso Vs. Consumo*
 ```{r}
 ggplot(data, 
        mapping = aes(x = income, 
@@ -140,13 +217,111 @@ ggplot(data,
 
 ```
 
+*Diagrama de dispersión para la variable Desempleo Vs. Consumo*
 ```{r}
+ggplot(data, 
+       mapping = aes(x = unemp, 
+                     y = consum)) +
+  geom_point(color= "lightseagreen")+
+  scale_x_continuous(
+    breaks = seq( -5.6, to= 28.4, by= 2),
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  scale_y_continuous(
+    breaks = seq(from = 5000, to = 35000, by = 5000), 
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  labs(title =  "Gráfica 5", x = "% Desempleo", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
+
+```
+
+
+
+*Diagrama de dispersión para la variable Tasa de Interés Real Vs. Consumo*
+```{r}
+ggplot(data, 
+       mapping = aes(x = interest, 
+                     y = consum)) +
+  geom_point(color= "saddlebrown")+
+  scale_x_continuous(
+    breaks = seq(from = -5.6, to = 28.3, by = 2.2),
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  scale_y_continuous(
+    breaks = seq(from = 5000, to = 35000, by = 5000), 
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  labs(title =  "Gráfica 6", x = "% Interés Real", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
+
+```
+
+*Diagrama de dispersión para la variable Inflación Vs. Consumo*
+
+```{r}
+ggplot(data, 
+       mapping = aes(x = inflation, 
+                     y = consum)) +
+  geom_point(color= "mediumblue")+
+  scale_x_continuous(
+    breaks = seq(from = -1.4, to = 23.1, by = 1.5),
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  scale_y_continuous(
+    breaks = seq(from = 5000, to = 35000, by = 5000), 
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  labs(title =  "Gráfica 7", x = "% de Inflación", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()
+
+```
+
+
+
+Se categorizaron los países según los tres grupos distintivos que pueden ser visualizados en el histograma de la distribución de los ingresos para nuestro universo de países. 
+
+```{r}
+ingbajo <- data %>% filter(between(income, 0,15000))
+ingbajo <- unique(ingbajo$iso3c)
+ingmedio <- data %>% filter(between(income, 15000,35000))
+ingmedio <- unique(ingmedio$iso3c)
+ingalto <- data %>% filter(between(income, 35000,60000))
+ingalto <- unique(ingalto$iso3c)
+
+```
+
+Agregamos una columna que indique en qué categoría de ingresos se encuentra cada país. y,posteriormente, realizamos el diagrama de dispersión.
+
+```{r}
+data <- data %>% mutate(grupo =
+                     case_when(income < 15000 ~ "Ingreso bajo", 
+                               income < 35000 ~ "Ingreso medio",
+                               income >= 35000 ~ "Ingreso alto"))
+
+```
+
+
+*Diagrama de dispersión para la variable Ingreso por Tipo de ingreso Vs. Consumo*
+```{r}
+ggplot(data, 
+       mapping = aes(x = income, 
+                     y = consum,
+                     color = grupo)) +
+  geom_point() +
+  geom_smooth(method = "lm", color="gray19")+
+  scale_x_continuous(
+    breaks = seq(from = 1000, to = 50000, by = 5000),
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  scale_y_continuous(
+    breaks = seq(from = 5000, to = 35000, by = 5000), 
+    labels = label_comma(decimal.mark = ",", big.mark = "."))+
+  labs(title = "Gráfica 8. Relación + entre la variable de consumo e ingreso", subtitle= " para los grupos de ingreso bajo, medio y alto", x = "Ingreso per cápita a precios constantes de 2010", y = "Consumo de los hogares", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  theme_bw()+
+  theme(legend.position = "left")
 ```
 
 **Respondiendo a la pregunta 9**
+
 De acuerdo con los resultados anteriores, se pudo observar
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
+
+
+
+
 
