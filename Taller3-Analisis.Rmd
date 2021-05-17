@@ -1,12 +1,12 @@
 ---
-title: "Impacto en el consumo de los hogares en la crisis del 2008"
+title: "Impacto de la crisis del 2008 en el consumo de  los hogares"
 author: "Alejandra Mancipe - Santiago Villamil"
 date: "11/5/2021"
 output: pdf_document
 ---
 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(wbstats)
 library(tidyverse)
 library(readr)
@@ -21,7 +21,7 @@ library(viridis)
 
 **Descargando las bases de datos**
 
-Con el fin de evaluar el impacto en el consumo de los hogares, se van a llamar las variables a usar que pueden servir para evaluar el impacto en el consumo de los hogares. Para ello, vamos a llamar las bases de datos para las variabes dependientes:*consumo(gasto en consumo final de los hogares a precios constantes de 2010)*,y las variables independientes: *ingreso nacional bruto per cápita(a precios constantes de 2010)* , *Desempleo total(% participación total en la fuerza laboral*, *PIB per cápita(US $ a precios constantes de 2010* , *inflación(a precios del consumidor en %anual)* , *la tasa de interés real(ajustada por la inflación, según el deflactor del PIB)* para los años 2006 al 2010; es decir 2 años antes de la crisis del 2008 y dos años posteriores a la crisis. Entre estos, se seleccionaron 21 paises siendo unos desarrollados y en vías de desarrollo provenientes de los diferentes continentes del mundo.Algunos países fueron agregados en función de remediar una subrepresentación de países con ingresos entre los 15 mil y 35 mil USD(2010) anuales.
+Con el fin de evaluar el impacto en el consumo de los hogares, se descargaron los datos de las variables a utilizar. Para ello, vamos a llamar las bases de datos para la variable dependiente:*consumo(gasto en consumo final de los hogares a precios constantes de 2010)*, y las variables independientes: *ingreso nacional bruto per cápita(a precios constantes de 2010)*, *Desempleo total(% participación total en la fuerza laboral*, *PIB per cápita(US $ a precios constantes de 2010* , *inflación(a precios del consumidor en %anual)* , *la tasa de interés real(ajustada por la inflación, según el deflactor del PIB)* para los años 2006 al 2010; es decir 2 años antes de la crisis del 2008 y dos años posteriores a la crisis. Entre estos, se seleccionaron 21 países siendo unos desarrollados y en vías de desarrollo provenientes de los diferentes continentes del mundo. Algunos países fueron agregados a los considerados inicialmente, en función de remediar una subrepresentación de países con ingresos entre los 15 mil y 35 mil US(2010) anuales.
 
 ```{r}
 data <- wb_data(c("NE.CON.PRVT.PC.KD","NY.GNP.PCAP.KD","SL.UEM.TOTL.ZS","NY.GDP.PCAP.KD", 
@@ -43,7 +43,7 @@ data$Grupo <- factor(data$Grupo, levels = c("Ingreso bajo", "Ingreso medio",
 
 ```
 
-Se realiza un filtro para encontrar países con ingreso medio, con el fin de incluirlos en la selección de países, puesto que con los datos originales, se observó una subrepresentación de países en éste rango de ingresos.
+Se realiza un filtro para encontrar países con ingreso medio, con el fin de incluirlos en la selección de países, puesto que con los datos originales, se observó una subrepresentación de países en éste rango de ingresos. Los países elegidos mediante este filtro ya están incluidos en *"data"*. 
 
 ```{r}
 midincome<- wb_data(c("NE.CON.PRVT.PC.KD","NY.GNP.PCAP.KD","SL.UEM.TOTL.ZS",
@@ -54,7 +54,8 @@ midincome <- midincome %>% filter(between(NY.GNP.PCAP.KD, 20000,40000))
 ```
 
 
-Los datos para la tasa de interés real no estaban disponibles para Alemania,España, Francia,Grecia,Israel y Ghana. Los datos para los dos primeros países se obtuvieron de Ycharts, y para Ghana, de la página oficial de Bank of Ghana. 
+Los datos para la tasa de interés real no estaban disponibles para Alemania, España, Francia, Grecia, Israel y Ghana. Los datos para los primeros países se obtuvieron de Ycharts, y para Ghana, de la página oficial de Bank of Ghana. A continuación, se incorporan esos datos en *"data"*. 
+
 ```{r}
 deu <- c(5.08,4.19,5.09,3.15,3.09)
 fra <- c(3.73,4.6,5.62,7.36,5.52)
@@ -69,7 +70,7 @@ interest <- append(interest[-c(46:60)], ghagrcisr, 45)
 data$interest <- interest
 ```
 
-**Asegurandonos de que las variables estén adecuadamente identificadas según su tipo **
+**Asegurándonos de que las variables estén adecuadamente identificadas según su tipo **
 
 Las variables están adecuadamente identificadas según su tipo, las variables identificadas como *"character"* en la base de datos son las variables **iso3c y country** y la variable identificada como *"factor"* es la variable categorizada por 3 ordenes de factores: Ingreso alto, medio y bajo.
 ```{r}
@@ -81,8 +82,8 @@ for (i in data) {
 **Realizando la tabla de estadísticas descriptivas**
 
 
-De acuerdo con los resultados de la *tabla1* de estadísticas descriptivas para las variables de estudio, se puede observar, que cada variable presenta 105 observaciones. Para el consumo de los hogares, se puede observar que el gasto en *Consumo* de los hogares mínimo para los países es de 13.143 US, y el máximo de 33.726 US con una media en el consumo de 13.143 US. En segundo lugar, para la variable *Ingreso* se puede observar que el ingreso mínimo de los hogares para los países de estudio es de 1.057 US, y el ingreso máximo es de 50.033 US y el ingreso medio de los hogares es de 22.380 US. 
-En tercer lugar, para la variable *Desempleo* que se encuentra en porcentaje, se puede observar que para el periodo de estudio del 2006 al 2008, el desempleo mínimo fue de 1.1%, lo que indica una tasa baja de desempleo.No obstante, se presentó como la tasa más alta de desempelo de 28.3% con una media de 6.9%. En cuarto lugar, para la variable *GDP* per cápita, se puede observar que para el periodo de estudio,la media del PIB 22.623 US, con un PIB máximo de 52.022 US a precios consantes de 2010.Por el lado de la *inflación* , se puede observar una inflación media de 4.5%; entre estas, tambien se observa una inflación negativa del 1.4% como valor mínimo y como valor máximo, se observa una inflación del 23.1%. Por último, se observa que para la variable de *interés real* , se obtuvo una tasa media del 4.4%. En ésta tasa, se observa un mínimo de -5.6% y como tasa máxima el 24.1%. 
+De acuerdo con los resultados de la *tabla1* de estadísticas descriptivas para las variables de estudio, se puede observar que cada variable presenta 105 observaciones. Para el consumo de los hogares, se puede observar que el gasto en *Consumo* de los hogares mínimo para los países es de 13.143 US, y el máximo de 33.726 US con una media en el consumo de 13.143 US. En segundo lugar, para la variable *Ingreso* se puede observar que el ingreso mínimo de los hogares para los países de estudio es de 1.057 US, y el ingreso máximo es de 50.033 US y el ingreso medio de los hogares es de 22.380 US. 
+En tercer lugar, para la variable *Desempleo* que se encuentra en porcentaje, se puede observar que para el periodo de estudio del 2006 al 2008, el desempleo mínimo fue de 1.1%, lo que indica una tasa baja de desempleo. No obstante, se presentó la tasa más alta de desempleo de 28.3% con una media de 6.9%. En cuarto lugar, para la variable *GDP* per cápita, se puede observar que para el periodo de estudio, la media del PIB 22.623 US, con un PIB máximo de 52.022 US a precios constantes de 2010. Por el lado de la *inflación*, se puede observar una inflación media de 4.5%; entre estas, también se observa una inflación negativa del 1.4% como valor mínimo y como valor máximo, se observa una inflación del 23.1%. Por último, se observa que para la variable de *interés real*, se obtuvo una tasa media del 4.4%. En esta tasa, se observa un mínimo de -5.6% y como tasa máxima, el 24.1%. 
 
 ```{r}
 stargazer(as.data.frame(data), type = "text", 
@@ -102,18 +103,18 @@ stargazer(as.data.frame(data), type = "text",
 **Histograma para la variable dependiente**
 
 
-En ésta gráfica no se oserva una distribución uniforme para la variable de consumo de los hogares.No obstante, se puede observar que la gran mayoría de países tienen un ingreso bajo  entre 960 y 5.500 dólares
+En esta gráfica no se observa una distribución uniforme para la variable de consumo de los hogares. No obstante, se puede observar que la gran mayoría de países tienen un ingreso bajo  entre 960 y 5.500 dólares
 
 ```{r}
 ggplot(data, 
        mapping = aes(x = consum, fill = Grupo)) + 
     geom_histogram(bins = 50)+
   scale_x_continuous(
-    breaks = c(0,1000,8200, 3000,50000,10000,15000,20000,25000,30000,35000,40000,45000,50000),
+    breaks = seq(0,35000,5000),
     labels = label_comma(decimal.mark = ",", big.mark = ".")) +
   scale_y_continuous(breaks = seq(from = 0, to = 18, by = 2))+
   scale_fill_viridis(discrete = TRUE)+
-    labs(title =  "Gráfica 1", x = "Gasto en consumo de los hogares ",y= "Frecuencia Abs",
+    labs(title =  "Gráfica 1", x = "Gasto en consumo de los hogares ", y= "Frecuencia Abs",
        caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()
 ```
@@ -124,31 +125,31 @@ ggplot(data,
 
 *- Histograma para la variable ingreso*
 
-En ésta gráfica, no se muestra una distribución uniforme, que permita determinar cómo es el ingreso en los paises de estudio.No obstante, se observa en la distribución por nivel de ingreso, que un gran número de países presentan un nivel de ingresos bajos entr 0 y 10000 dólares.
+En ésta gráfica, no se muestra una distribución uniforme que permita determinar cómo es el ingreso en los países de estudio. No obstante, se observa en la distribución por nivel de ingreso, que un gran número de países presentan un nivel de ingresos bajos entre 0 y 10000 dólares.
 ```{r}
 ggplot(data, 
        mapping = aes( x = income, fill= Grupo)) +
   geom_histogram(bins = "50")+
   scale_fill_viridis(discrete = TRUE)+
   scale_x_continuous(
-    breaks = c(0,10000,20000,25000,30000,40000,50000),
+    breaks = seq(0,50000, 10000),
     labels = label_comma(decimal.mark = ",", big.mark = ".")) +
-  labs(title =  "Gráfica 2.", x = "Ingreso Per Cápita", y= "Frecuencia Abs",
+  labs(title =  "Gráfica 2", x = "Ingreso Per Cápita", y= "Frecuencia Abs",
        caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()
 ```
 
 *- Histograma para la variable Desempleo*
 
-En ésta gráfica, se puede observar que para la varable de desempleo los datos observados para el periodo de estudio comprendido entre el 2006 al 2010, eldesmpleo estuvo agrupado a tasas entre 1.1% y 12.1%. Por lo que se muestra un sesgo hacia la izquierda, para los 3 tipos de ingresos. No obstente, se observa unos datos atípicos de algunos países de ingresos bajos con tasas de desempleo relativamente altas entre el 21% al 28%.
+En esta gráfica, se puede observar que para la variable de desempleo los datos observados para el periodo de estudio comprendido entre el 2006 al 2010, el desempleo estuvo agrupado a tasas entre 1.1% y 12.1%. De esa forma, hay un sesgo a la derecha en la distribución para los 3 tipos de ingresos. No obstante, se observan unos datos atípicos de algunos países de ingresos bajos con tasas de desempleo  altas, entre el 21% al 28%.
 ```{r}
 ggplot(data, 
        mapping = aes(x = unemp, fill= Grupo)) + 
     geom_histogram(bins="50")+
   scale_fill_viridis(discrete = TRUE)+ 
    scale_x_continuous(
-    breaks = seq(from=1.1, to= 28.3, by= 5)) +
-  labs(title =  "Gráfica 3.", x = "% DESEMPLEO", y="Frecuencia ",
+    breaks = seq(from=0, to= 30, by= 2)) +
+  labs(title =  "Gráfica 3", x = "% Desempleo", y="Frecuencia ",
        caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()
 ```
@@ -156,7 +157,7 @@ ggplot(data,
 *- Histograma para la variable GDP*
 
 
-En ésta gráfica, no se observa una distribución uniforme, que permita determinar como es el GDP per cápita en los paises de estudio. No obstante,al estar separados por nivel de ingreso, se puede observar que es una gráfica muy similar a la del ingreso per cápita. En ésta, se observa que un gran número de países presentan un nivel de ingresos bajos entre 0 y 10000 dólares.
+En esta gráfica, no se observa una distribución uniforme, que permita determinar como es el GDP per cápita en los países de estudio. No obstante, al estar separados por nivel de ingreso, se puede observar que es una gráfica muy similar a la del ingreso per cápita. En ésta, se observa que un gran número de países presentan un nivel de ingresos bajos entre 0 y 10000 dólares.
 ```{r}
 
 ggplot(data, 
@@ -164,7 +165,7 @@ ggplot(data,
     geom_histogram(bins = 50)+
    scale_x_continuous(
     breaks = seq(from=0, to= 50000, by= 10000)) +
-  labs(title =  "Gráfica 4.", x = "GDP Per Cápita",y="Frecuencia Abs",
+  labs(title =  "Gráfica 4", x = "GDP Per Cápita",y="Frecuencia Abs",
        caption = "Elaboración propia, datos tomados del Banco Mundial")+
   scale_fill_viridis(discrete = TRUE)+ 
   theme_bw()
@@ -173,36 +174,35 @@ ggplot(data,
 *- Histograma para la variable inflación*
 
 
-En ésta gráfica, se puede observar que para el periodo de estudio, los datos para la inflación de los países en estudio, para los tres ingresos se encuentran agrupados entre -1.8% y 8.6%. Por lo que se observa un sesgo hacia la izquierda.Además de esto, también se observan unos datos atípicos de algunos países con ingresos bajos con una elevada tasa de inflación para el periodo de estudio.
+En esta gráfica, se puede observar que para el periodo de estudio, los datos para la inflación de los países para los tres tipos de ingresos se encuentran agrupados entre -1.8% y 8.6%. Por ello, se observa un sesgo a la derecha. Además de esto, también se observan unos datos atípicos de algunos países con ingresos bajos con una elevada tasa de inflación para el periodo de estudio.
 ```{r}
 ggplot(data, 
        mapping = aes(x = inflation, fill = Grupo)) + 
     geom_histogram(bins = "50")+
   scale_x_continuous(
-    breaks = seq(from= -1.4, to= 23.1, by= 2)) +
-  labs(title =  "Gráfica 5.", x = "Inflación",y= "Frecuencia", 
-       caption = "Elaboración propia, datos tomados del Banco Mundial")+
-  scale_fill_viridis(discrete = TRUE) 
+    breaks = seq(from= -4, to= 25, by= 2)) +
+  labs(title =  "Gráfica 5", x = "Inflación", y= "Frecuencia", caption = "Elaboración propia, datos tomados del Banco Mundial")+
+  scale_fill_viridis(discrete = TRUE) +
   theme_bw()
 ```
 
-*- Hispograma para la Variable Tasa de interés real*
+*- Histograma para la Variable Tasa de interés real*
 
-En ésta gráfica, se puede observar que para el periodo de estudio comprendido entre 2006 y 2010, la tasa de interés real de los paises observados se encuentran agrupados entre -3.6% y 10.4% con un sesgo hacia la izquierda.
+En esta gráfica, se puede observar que para el periodo de estudio comprendido entre 2006 y 2010, las tasas de interés real de los países observados se encuentran agrupadas entre -3.6% y 10.4% con un sesgo hacia la derecha.
 ```{r}
 
 ggplot(data, 
        mapping = aes(x = interest, fill = Grupo)) + 
     geom_histogram(bins = "50")+
   scale_x_continuous(
-    breaks = seq(from= -5.6, to= 24.4, by= 2)) +
-  labs(title =  "Gráfica 6.", x = "Tasa de interés real", 
+    breaks = seq(from= -6, to= 26, by= 2)) +
+  labs(title =  "Gráfica 6", x = "Tasa de interés real", 
        caption = "Elaboración propia, datos tomados del Banco Mundial")+
   scale_fill_viridis(discrete = TRUE)+ 
   theme_bw()
 ```
 
-En las **gráficas 3,5 y 6**, que hacen referencia a las variables de desempelo, inflación u tasa de interés real resectivamente, se puede observar que para los 3 niveles de ingreso, los países de estudio, presentan un sesgo hacia la izquierda.
+En las **gráficas 3,5 y 6**, que hacen referencia a las variables de desempleo, inflación o tasa de interés real respectivamente, se puede observar que para los 3 niveles de ingreso, los países de estudio presentan un sesgo hacia la derecha.
 
 
 
@@ -220,7 +220,7 @@ ingalto <- unique(ingalto$iso3c)
 
 **Matriz de Correlaciones**
 
-Se puede observar que para las variables ingreso per cápita y GDP per cápita, existe una fuerte correlación lineal entre la variable dependiente consumo, ya que son muy cercanas a 1, lo que quiere decir que las variables son directamente proporcionales; mientras que para las demás variables: *desempleo, inflación y la tasa de interés real* , se observa una correlación negativa entre la variable dependiente, lo que quiere decir que son inversamente proporcionales.
+Se puede observar que para las variables ingreso per cápita y GDP per cápita, existe una fuerte correlación lineal entre la variable dependiente consumo, ya que son muy cercanas a 1, lo que quiere decir que las variables son casi directamente proporcionales. Por otro lado, para las demás variables (*desempleo, inflación y la tasa de interés real*) , se observa una correlación negativa con la variable dependiente.
 
 ```{r}
 variables <- data %>% select("consum":"interest")
@@ -231,7 +231,7 @@ cor(variables)
 
 *- Diagrama de dispersión para la variable Ingreso por Tipo de ingreso Vs. Consumo*
 
-En ésta gráfica, se puede observar que para los paises de bajos ingresos, el consumo también será bajo(menos de 10.000 USD). Lo que muestra que a medida que va aumentando el ingreso en el país, el consumo de los hogares también es mayor. 
+En esta gráfica se puede observar que para los países de bajos ingresos, el consumo también será bajo (menos de 10.000 US). Ello muestra que a medida que va aumentando el ingreso en el país, el consumo de los hogares también es mayor. 
 
 
 
@@ -247,7 +247,7 @@ ggplot(data,
   scale_y_continuous(
     breaks = seq(from = 5000, to = 35000, by = 5000), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs(title =  "Gráfica 8", 
+  labs(title =  "Gráfica 7", 
        subtitle="Relación + entre la variable de consumo e ingreso",
        x = "Ingreso per cápita a precios constantes de 2010",
        y = "Consumo de los hogares",
@@ -264,7 +264,7 @@ ggplot(data,
 
 *- Diagrama de dispersión para la variable GDP Vs. Consumo*
 
-En ésta grafica, se puede observar que a medida que aumenta el GDP per cápita, también aumenta el consumo de los hogares. Por lo que existe una relación positiva entre la varible consumo y GDP.
+En esta gráfica, se puede observar que a medida que aumenta el GDP per cápita, también aumenta el consumo de los hogares. Por lo que existe una relación positiva entre la variable consumo y GDP.
 ```{r}
 ggplot(data, 
        mapping = aes(x = gdppc, 
@@ -277,7 +277,7 @@ ggplot(data,
   scale_y_continuous(
     breaks = seq(from = 5000, to = 35000, by = 5000), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs(title =  "Gráfica 9",
+  labs(title =  "Gráfica 8",
        subtitle="Relación + entre la variable de consumo y GDP",
        x = "GPD per cápita a US$ constantes de 2010", 
        y = "Consumo de los hogares",
@@ -296,7 +296,7 @@ ggplot(data,
 *- Diagrama de dispersión para la variable Desempleo Vs. Consumo*
 
 
-En ésta gráfica se puede observar que para los países de ingresos más altos han presentado menos variabilidad en las tasas de desempleo, ya que presentan tasas de desempleo entre el 5% y 10% a tasas de interés, con un nivel de consumo entre 20.000 USD y 30.000 USD. Para los países de ingresos bajos se encuentran concentrados a tasas de desempleo entre 0 y 5% con niveles de consumo menores a los 5.000 USD.No obstante, para este nivel de ingreso se puede observar algunos países con tasas de desempleo elevadas con un nivel de consumo muy cercano a los 5.000 USD.
+En esta gráfica se puede observar que los países de ingresos más altos han presentado menos variabilidad en las tasas de desempleo, ya que presentan tasas de desempleo entre el 5% y 10% a tasas de interés, con un nivel de consumo entre 20.000 US y 30.000 US. Para los países de ingresos bajos se encuentran concentrados a tasas de desempleo entre 0 y 5% con niveles de consumo menores a los 5.000 US. No obstante, para este nivel de ingreso se puede observar algunos países con tasas de desempleo elevadas con un nivel de consumo muy cercano a los 5.000 US.
 
 ```{r}
 ggplot(data, 
@@ -310,7 +310,7 @@ ggplot(data,
   scale_y_continuous(
     breaks = seq(from = 5000, to = 35000, by = 5000), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs(title =  "Gráfica 10", x = "% Desempleo",
+  labs(title =  "Gráfica 9", x = "% Desempleo",
        y = "Consumo de los hogares",
        caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()+
@@ -325,7 +325,7 @@ ggplot(data,
 
 *- Diagrama de dispersión para la variable Inflación Vs. Consumo*
 
-En ésta gráfica, se puede observar que para los países de ingresos bajos, presentan tasas de inflación entre el 0 y 10% a niveles de consumo menores a los 6.000 US. Mientras que los paíeses de igresos medios y altos presentan tasas de inflación entre 0 y 5%.
+En esta gráfica, se puede observar que los países de ingresos bajos, presentan tasas de inflación entre el 0 y 10% a niveles de consumo menores a los 6.000 US. En contraste, los países de ingresos medios y altos presentan tasas de inflación entre 0 y 5%.
 ```{r}
 ggplot(data, 
        mapping = aes(x = inflation, 
@@ -338,7 +338,7 @@ ggplot(data,
   scale_y_continuous(
     breaks = seq(from = 5000, to = 35000, by = 5000), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs(title =  "Gráfica 11",
+  labs(title =  "Gráfica 10",
        x = "% de Inflación",
        y = "Consumo de los hogares",
        caption = "Elaboración propia, datos tomados del Banco Mundial")+
@@ -354,7 +354,7 @@ ggplot(data,
 
 *- Diagrama de dispersión para la variable Tasa de Interés Real Vs. Consumo*
 
-En ésta gráfica se puede observar que para el periodo de estudio, los países con ingresos altos se han mantenido a tasas cercanas entre 0 y 9%; mientras que para los países de ingresos medios y bajo han experimentato tasas de interés reales negativas.
+En esta gráfica se puede observar que para el periodo de estudio, los países con ingresos altos se han mantenido a tasas cercanas entre 0 y 9%; los países de ingresos medios y bajo han experimentado tasas de interés reales negativas.
 ```{r}
 ggplot(data, 
        mapping = aes(x = interest, 
@@ -367,7 +367,7 @@ ggplot(data,
   scale_y_continuous(
     breaks = seq(from = 5000, to = 35000, by = 5000), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs(title =  "Gráfica 12", x = "% Interés Real", 
+  labs(title =  "Gráfica 11", x = "% Interés Real", 
        y = "Consumo de los hogares",
        caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()+
@@ -385,7 +385,7 @@ ggplot(data,
 
 *- Diagrama de dispersión para la variable inflación Vs. Desempleo*
 
-En ésta gráfica se puede observar que los países de ingresos altos, tienen tasas de desempleo estables entre el 0 y 5% a niveles menores en la tasa de inflación. Para los países de ingresos medios y bajos, se puede observar que presentan una mayor variabilidad en la tasa de desempleo con niveles más altos de inflación. Los países ricos tienden a tener menores desviaciones del origen,por lo tanto, son mucho más estables y coherentes entre sí.
+En esta gráfica se puede observar que los países de ingresos altos, tienen tasas de desempleo estables entre el 0 y 5% a niveles menores en la tasa de inflación. Para los países de ingresos medios y bajos, se puede observar que presentan una mayor variabilidad en la tasa de desempleo con niveles más altos de inflación. Los países ricos tienden a tener menores desviaciones del origen, por lo tanto, son mucho más estables y coherentes entre sí.
 ```{r}
 ggplot(data, 
        mapping = aes(x = unemp, 
@@ -399,10 +399,10 @@ ggplot(data,
   scale_y_continuous(
     breaks = seq(from = -5, to = 25, by = 5), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs(title =  "Gráfica 13.", 
+  labs(title =  "Gráfica 12", 
        x = "Tasa de desempleo", 
-       y = "Tasa de inflación", caption = "Elaboración propia, 
-       datos tomados del Banco Mundial")+
+       y = "Tasa de inflación", 
+       caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()+
   theme(legend.position = "left")+
   scale_color_manual(name="Nivel de ingreso", 
@@ -416,7 +416,7 @@ ggplot(data,
 
 *- Diagrama de dispersión para la variable desempleo Vs. interés*
 
-En ésta gráfica se puede observar que para los países de estudio, en los 3 niveles de ingreso presentan tasas de desempleo entre el 1.1% y el 12%. No obstante, también se observa que algunos paises de ingreso bajo presentan tasas de desempleo demasiado elevadas con tasas de interés bajas a comparación con los demás paises que presentan tasas de desmpleo bajas y tasas de interes también bajas.
+En esta gráfica se puede observar que para los países de estudio, en los 3 niveles de ingreso presentan tasas de desempleo entre el 1.1% y el 12%. No obstante, también se observa que algunos países de ingreso bajo presentan tasas de desempleo demasiado elevadas con tasas de interés bajas a comparación con los demás países que presentan tasas de desmpleo bajas y tasas de interés también bajas.
 ```{r}
 ggplot(data, 
        mapping = aes(x = unemp, 
@@ -430,10 +430,10 @@ ggplot(data,
   scale_y_continuous(
     breaks = seq(from = -10, to = 25, by = 5), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs(title = "Gráfica 14", 
+  labs(title = "Gráfica 13", 
        x = "Tasa de desempleo", 
-       y = "Tasa de interés", caption = "Elaboración propia, 
-       datos tomados del Banco Mundial")+
+       y = "Tasa de interés", 
+       caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()+
   theme(legend.position = "left")+
   scale_color_manual(name="Nivel de ingreso", values = c("Ingreso bajo"= "magenta1",
@@ -447,7 +447,7 @@ ggplot(data,
 
 *Diagrama de dispersión para la tasa de inflación Vs. la tasa de interés*
 
-En ésta gráfica se puede observar que para los países de los 3 niveles de ingresos presentan tasas de inflación entre 0 y 5%, a tasas de interés entre 0 y 10%. No obstante, también se observa que para los países de ingresos bajo, han presentado una mayor tasa de infación para el periodo de estudio.
+En esta gráfica se puede observar que para los países de los 3 niveles de ingresos presentan tasas de inflación entre 0 y 5%, a tasas de interés entre 0 y 10%. No obstante, también se observa que los países de ingresos bajos, han presentado una mayor tasa de infación para el periodo de estudio.
 ```{r}
 ggplot(data, 
        mapping = aes(x = inflation, 
@@ -461,14 +461,13 @@ ggplot(data,
   scale_y_continuous(
     breaks = seq(from = -10, to = 25, by = 5), 
     labels = label_comma(decimal.mark = ",", big.mark = "."))+
-  labs( title = "Gráfica 15",
+  labs( title = "Gráfica 14",
        x = "Tasa de inflación", 
-       y = "Tasa de interés", caption = "Elaboración propia, 
-       datos tomados del Banco Mundial")+
+       y = "Tasa de interés", 
+       caption = "Elaboración propia, datos tomados del Banco Mundial")+
   theme_bw()+
   theme(legend.position = "left")+
-  scale_color_manual(name="Nivel de ingreso", values = c("Ingreso bajo"= "magenta1", "Ingreso medio"= "mediumpurple", "Ingreso alto"= "navy"))
-
+  scale_color_manual(name="Nivel de ingreso", values = c("Ingreso bajo"= "magenta1", "Ingreso medio" = "mediumpurple", "Ingreso alto"= "navy"))
 
 ```
 
@@ -477,12 +476,17 @@ ggplot(data,
 
 
 
-De acuerdo con los resultados anteriores, se pudo observar que tanto para las variables gasto e ingreso no se presenta una distribución uniforme, debido a que para este estudio se tomaron países en desarrollo y en vías de desarrollo, de los cuales algunos fueron impactados por la crisis financiera del 2008 y debido a que estos países se categorizaron en 3 niveles de ingreso: **"Alto, Medio y Bajo"**. No obstante, para los diagramas de dispersión de las variables de estudio, se observo una relación positiva principalmente entre las variables **Ingreso Vs. Consumo** , **PIB Vs. Consumo**. En cuanto a las variables de desempleo, se observó una relación positiva con la variable consumo,lo cual se esperaba que fuera una ralación negativa; es decir que a medida que la tasa de desempelo aumenta, el consumo de los hogares disminuye. En adición a esto, también se obvervó que para el periodo de estudio, los países con ingresos altos no presentó mucha variabilidad en cuanto al desempleo  y su consumo se mantuvo entre 22.000 US y 35.000 US.
+De acuerdo con los resultados anteriores, se pudo observar que tanto para las variables gasto e ingreso no se presenta una distribución uniforme, debido a que para este estudio se tomaron países en desarrollo y en vías de desarrollo, entre los cuales algunos fueron impactados por la crisis financiera del 2008. No obstante, para los diagramas de dispersión de las variables de estudio, se observó una relación positiva principalmente entre las variables **Ingreso Vs. Consumo** , **PIB Vs. Consumo**. En cuanto a las variables de desempleo, se observó una relación positiva con la variable consumo, lo cual se esperaba que fuera una ralación negativa, es decir que a medida que la tasa de desempelo aumenta, el consumo de los hogares disminuye. En adición a esto, también se obvervó que para el periodo de estudio, los países con ingresos altos no presentó mucha variabilidad en cuanto al desempleo  y su consumo se mantuvo entre 22.000 US y 35.000 US.
 
-En cuanto a las variables de inflación y la tasa de interés real respecto a la variable de consumo, los cuales presentaron una correlación negativa, se pudo observar en los diagramas de dispersión 
+En cuanto a la variable de inflación y su relación con el consumo, hay una clara tendencia de los países de ingresos medios y altos a tener una inflación menor al 5%. Para los países de ingresos bajos los datos se concentran en el rango del 2 y 10%, pero no hay una cantidad despreciable de datos más allá de esa cota. 
+
+Algo similar puede decirse de la relación entre el consumo y la tasa de interés real. Los países de ingresos bajos se mueven a lo largo de todo el rango (-5 a 21%); los países de ingresos medios se mueven en un rango menor (-2 a 10%), con la única excepción de Baréin en el año 2009. Por últimol los países de ingresos altos se mueven entre el (-1 y 7%), sin ningún dato atípico. Es interesante resaltar que en comparación con los otros rangos, este es menor en ambos extremos de la distribución. La información obtenida para cada par de variables será de utilidad para tratar a cada grupo de países con consideraciones particulares. 
+
+ 
 
 
 
+ 
 
  
 
